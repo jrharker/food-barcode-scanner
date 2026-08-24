@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,6 +27,9 @@ input{width:100%;padding:13px;border:1.5px solid #d5e1db;border-radius:10px;font
 <div class="video-wrap"><video id="video" playsinline muted></video><div class="target"><div class="line"></div></div></div>
 <div id="status" class="status">Tap Start Camera.</div>
 <button class="primary" id="startBtn">Start Camera</button>
+<p style="margin-top:12px;font-size:12px;">
+  To avoid repeated camera prompts on iPhone, in Safari open Page Menu → Website Settings and set Camera to Allow for jrharker.github.io.
+</p>
 <div class="manual"><input id="manualCode" type="text" inputmode="numeric" autocomplete="off" placeholder="Or enter barcode manually">
 <button class="secondary" id="returnManualBtn">Return Barcode to Food Logger</button></div>
 </div></div>
@@ -74,7 +78,7 @@ async function startCamera(){
     document.getElementById('startBtn').disabled=false;
     document.getElementById('status').textContent=
       (e&&(e.name==='NotAllowedError'||e.name==='SecurityError'))
-      ?'Camera access was not allowed for this scanner page.'
+      ?'Camera access was not allowed. In Safari, open Page Menu → Website Settings and set Camera to Allow for jrharker.github.io.'
       :'Camera could not be started. You can enter the barcode manually below.';
   }
 }
