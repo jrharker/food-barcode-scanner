@@ -43,7 +43,11 @@ function validReturnUrl(url){
   try{
     const p=new URL(url);
     return p.protocol==='https:' &&
-      (p.hostname==='script.google.com'||p.hostname.endsWith('.googleusercontent.com'));
+      (
+        p.hostname==='script.google.com' ||
+        p.hostname.endsWith('.googleusercontent.com') ||
+        (p.hostname==='jrharker.github.io' && p.pathname.startsWith('/protein/'))
+      );
   }catch(e){return false}
 }
 function returnBarcode(code){
@@ -89,3 +93,4 @@ addEventListener('pagehide',()=>{if(controls){try{controls.stop()}catch(e){}}});
 </script>
 </body>
 </html>
+
