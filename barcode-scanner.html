@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b5958">
+<title>Food Logger Barcode Scanner</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#eef5f1;color:#1f2a25}
+.top{background:#0b5958;color:#fff;padding:18px 20px;font-weight:800;font-size:20px}
+.wrap{max-width:520px;margin:0 auto;padding:20px}.card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+h1{margin:0 0 8px;font-size:24px}p{margin:0 0 16px;line-height:1.45;color:#65716b}
+.video-wrap{position:relative;width:100%;aspect-ratio:4/3;background:#111;border-radius:14px;overflow:hidden}
+video{width:100%;height:100%;object-fit:cover;display:block}.target{position:absolute;left:7%;right:7%;top:34%;height:32%;border:2px solid #fff;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.18);pointer-events:none}
+.line{position:absolute;left:7%;right:7%;top:50%;height:2px;background:#fff}.status{min-height:22px;margin:14px 0;text-align:center;color:#65716b;font-size:14px}
+button{width:100%;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:750;cursor:pointer}.primary{background:#2d8535;color:#fff}
+.secondary{margin-top:10px;background:#eef5f1;color:#0b5958;border:1px solid #d5e1db}.manual{margin-top:16px;padding-top:16px;border-top:1px solid #e3e9e6}
+input{width:100%;padding:13px;border:1.5px solid #d5e1db;border-radius:10px;font-size:17px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="top">Food Logger</div>
+<div class="wrap"><div class="card">
+<h1>Scan Product Barcode</h1>
+<p>Hold the barcode inside the frame. When it is read, you will return automatically to Food Logger.</p>
+<div class="video-wrap"><video id="video" playsinline muted></video><div class="target"><div class="line"></div></div></div>
+<div id="status" class="status">Tap Start Camera.</div>
+<button class="primary" id="startBtn">Start Camera</button>
+<div class="manual"><input id="manualCode" type="text" inputmode="numeric" autocomplete="off" placeholder="Or enter barcode manually">
+<button class="secondary" id="returnManualBtn">Return Barcode to Food Logger</button></div>
+</div></div>
+<script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const returnUrl=params.get('return')||'';
+let controls=null,handled=false;
+
+function validReturnUrl(url){
+  try{
+    const p=new URL(url);
+    return p.protocol==='https:' &&
+      (p.hostname==='script.google.com'||p.hostname.endsWith('.googleusercontent.com'));
+  }catch(e){return false}
+}
+function returnBarcode(code){
+  code=String(code||'').replace(/\s+/g,'').trim();
+  if(!/^\d{8,14}$/.test(code)){document.getElementById('status').textContent='Enter a valid 8 to 14 digit barcode.';return}
+  if(!validReturnUrl(returnUrl)){document.getElementById('status').textContent='Food Logger return address is missing or invalid.';return}
+  if(controls){try{controls.stop()}catch(e){} controls=null}
+  const sep=returnUrl.includes('?')?'&':'?';
+  location.href=returnUrl+sep+'barcode='+encodeURIComponent(code);
+}
+async function startCamera(){
+  if(!window.ZXingBrowser||!ZXingBrowser.BrowserMultiFormatReader){document.getElementById('status').textContent='Scanner library could not load.';return}
+  document.getElementById('status').textContent='Starting camera...';
+  document.getElementById('startBtn').disabled=true; handled=false;
+  try{
+    const reader=new ZXingBrowser.BrowserMultiFormatReader();
+    controls=await reader.decodeFromConstraints(
+      {audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}},
+      document.getElementById('video'),
+      function(result,error,scanControls){
+        if(!result||handled)return;
+        const code=String(result.getText?result.getText():result.text||'').replace(/\s+/g,'').trim();
+        if(!/^\d{8,14}$/.test(code))return;
+        handled=true;
+        document.getElementById('status').textContent='Barcode read: '+code;
+        try{scanControls.stop()}catch(e){} controls=null;
+        setTimeout(function(){returnBarcode(code)},150);
+      }
+    );
+    document.getElementById('status').textContent='Camera ready. Hold the barcode steady inside the frame.';
+  }catch(e){
+    document.getElementById('startBtn').disabled=false;
+    document.getElementById('status').textContent=
+      (e&&(e.name==='NotAllowedError'||e.name==='SecurityError'))
+      ?'Camera access was not allowed for this scanner page.'
+      :'Camera could not be started. You can enter the barcode manually below.';
+  }
+}
+document.getElementById('startBtn').addEventListener('click',startCamera);
+document.getElementById('returnManualBtn').addEventListener('click',()=>returnBarcode(document.getElementById('manualCode').value));
+document.getElementById('manualCode').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();returnBarcode(this.value)}});
+addEventListener('pagehide',()=>{if(controls){try{controls.stop()}catch(e){}}});
+</script>
+</body>
+</html>
