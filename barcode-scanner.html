@@ -46,7 +46,13 @@ function validReturnUrl(url){
       (
         p.hostname==='script.google.com' ||
         p.hostname.endsWith('.googleusercontent.com') ||
-        (p.hostname==='jrharker.github.io' && p.pathname.startsWith('/protein/'))
+        (
+          p.hostname==='jrharker.github.io' &&
+          (
+            p.pathname.startsWith('/protein/') ||
+            p.pathname.startsWith('/nutrition-app/')
+          )
+        )
       );
   }catch(e){return false}
 }
@@ -93,4 +99,3 @@ addEventListener('pagehide',()=>{if(controls){try{controls.stop()}catch(e){}}});
 </script>
 </body>
 </html>
-
