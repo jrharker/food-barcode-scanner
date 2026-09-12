@@ -36,7 +36,8 @@ input{width:100%;padding:13px;border:1.5px solid #d5e1db;border-radius:10px;font
 <script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
 <script>
 const params=new URLSearchParams(location.search);
-const returnUrl=params.get('return')||'';
+const DEFAULT_RETURN_URL='https://jrharker.github.io/nutrition-app/';
+const returnUrl=params.get('return')||DEFAULT_RETURN_URL;
 let controls=null,handled=false;
 
 function validReturnUrl(url){
